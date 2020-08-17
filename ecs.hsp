@@ -1,0 +1,251 @@
+
+#const false 0
+#const true 1
+
+#module
+
+#deffunc entity_init
+
+	s_entity_count = 0
+	dim s_entity_ids
+	return
+
+#deffunc entity_create
+
+	s_entity_count++
+	return s_entity_count - 1
+
+#global
+
+#module
+
+#deffunc poses_init
+
+	s_count = 0
+	dim s_pxs
+	dim s_pys
+	return
+
+#deffunc poses_get_xy int ei, var px, var py
+
+	px = s_pxs(ei)
+	py = s_pys(ei)
+	return
+
+#deffunc poses_set_xy int ei, int px, int py
+
+	s_pxs(ei) = px
+	s_pys(ei) = py
+	return
+
+#global
+
+#module
+
+#deffunc vels_init
+
+	s_count = 0
+	dim s_vxs
+	dim s_vys
+	return
+
+#deffunc vels_get_xy int ei, var vx, var vy
+
+	vx = s_vxs(ei)
+	vy = s_vys(ei)
+	return
+
+#deffunc vels_set_xy int ei, int vx, int vy
+
+	s_vxs(ei) = vx
+	s_vys(ei) = vy
+	return
+
+#global
+
+#module
+
+#deffunc color_from_rgb int r, int g, int b
+
+	assert 0 <= r && r <= 255
+	assert 0 <= g && g <= 255
+	assert 0 <= b && b <= 255
+	return (r << 16) | (g << 8) | b
+
+#deffunc color_use int c, \
+	local r, local g, local b
+
+	r = (c >> 16) & 0xff
+	g = (c >> 8) & 0xff
+	b = c & 0xff
+	color r, g, b
+	return
+
+#global
+
+#module
+
+#deffunc colors_init
+
+	s_count = 0
+	dim s_foregrounds
+	return
+
+#deffunc colors_get int ei, var f
+
+	f = s_foregrounds(ei)
+	return
+
+#deffunc colors_set int ei, int f
+
+	s_foregrounds(ei) = f
+	return
+
+#global
+
+#module
+
+#deffunc hovers_init
+
+	dim s_hovers
+	return
+
+#deffunc hovers_get int ei, var value
+
+	value = s_hovers(ei)
+	return
+
+#deffunc hovers_set int ei, int value
+
+	s_hovers(ei) = value
+	return
+
+#global
+
+	// init
+	randomize
+	entity_init
+	poses_init
+	vels_init
+	colors_init
+
+	s_window_sx = ginfo_winx
+	s_window_sy = ginfo_winy
+
+	sx = 10
+	sy = 10
+	dim px
+	dim py
+	dim qx
+	dim qy
+	dim vx
+	dim vy
+
+	s_ball_count = 50
+	dim s_ball_es
+
+	repeat s_ball_count
+		entity_create
+		s_ball_es(cnt) = stat
+
+		poses_set_xy s_ball_es(cnt), rnd(s_window_sx - sx), rnd(s_window_sy - sy)
+		vels_set_xy s_ball_es(cnt), rnd(3) - 1, rnd(3) - 1
+
+		x = rnd(128) + 128
+		colors_set s_ball_es(cnt), (x << 16)| (x << 8) | x
+	loop
+
+	repeat
+		// update
+
+		// 移動
+		repeat s_ball_count
+			poses_get_xy s_ball_es(cnt), px, py
+			vels_get_xy s_ball_es(cnt), vx, vy
+
+			px += vx
+			py += vy
+			poses_set_xy s_ball_es(cnt), px, py
+		loop
+
+		// 衝突
+		repeat s_ball_count
+			poses_get_xy s_ball_es(cnt), px, py
+			vels_get_xy s_ball_es(cnt), vx, vy
+
+			// ボール同士の衝突
+			collided = false
+			b1 = cnt
+			repeat s_ball_count
+				if cnt == b1 {
+					continue
+				}
+
+				poses_get_xy s_ball_es(cnt), qx, qy
+
+				x_col = px <= qx + sx && qx <= px + sx
+				x_col |= qx <= px + sx && px <= qx + sx
+				y_col = py <= qy + sy && qy <= py + sy
+				y_col |= qy <= py + sy && py <= qy + sy
+				if x_col && y_col {
+					collided = true
+					break
+				}
+			loop
+			if collided {
+				vx *= -1
+				vy *= -1
+			}
+
+			// 壁との衝突
+			if px <= 0 || px + sx >= s_window_sx {
+				vx *= -1
+			}
+			if py <= 0 || py + sy >= s_window_sy {
+				vy *= -1
+			}
+
+			vels_set_xy s_ball_es(cnt), vx, vy
+		loop
+
+		// マウスホバー
+		s_mouse_x = mousex
+		s_mouse_y = mousey
+		repeat s_ball_count
+			poses_get_xy s_ball_es(cnt), px, py
+
+			x_ok = px <= s_mouse_x && s_mouse_x <= px + sx
+			y_ok = py <= s_mouse_y && s_mouse_y <= py + sy
+			hovers_set s_ball_es(cnt), x_ok && y_ok
+		loop
+
+		// render
+		redraw 2
+
+		hsvcolor ,, 21 // black
+		boxf
+		hsvcolor ,, 225 // white
+
+		repeat s_ball_count
+			f = 0
+			is_hover = 0
+
+			poses_get_xy s_ball_es(cnt), px, py
+			colors_get s_ball_es(cnt), f
+			hovers_get s_ball_es(cnt), is_hover
+
+			r = (f >> 16) & 0xff
+			g = (f >> 8) & 0xff
+			b = f & 0xff
+			if is_hover {
+				g = 0
+				b = 0
+			}
+			color r, g, b
+
+			circle px, py, px + sx, py + sy
+		loop
+
+		redraw
+		await 16
+	loop
