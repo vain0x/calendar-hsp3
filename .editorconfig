@@ -1,0 +1,6 @@
+root = true
+
+[*.hsp]
+indent_size = 4
+indent_style = tab
+charset = utf-8
