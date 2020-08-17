@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+ginger run mod_calendar_tests.hsp

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+ginger build --release main.hsp

@@ -1,0 +1,29 @@
+
+#include "hsp3utf.as"
+#include "mod_calendar.hsp"
+
+#const false 0
+
+	assert day_of_week(1901, 1, 1) == k_dow_tue
+	assert day_of_week(2020, 8, 18) == k_dow_tue
+
+	repeat 30, 1
+		assert (day_of_week(2020, 8, cnt) + 2) \ 7 == cnt \ 7
+	loop
+
+	// 4の倍数ではないので閏年ではない。
+	assert is_leap_year(2021) == false
+	// 4の倍数であり100の倍数ではないので閏年である。
+	assert is_leap_year(2020)
+	// 100の倍数であり400の倍数ではないので閏年である。
+	assert is_leap_year(1900) == false
+	// 400の倍数なので閏年である。
+	assert is_leap_year(2000)
+
+	s_day_counts = 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+	repeat 12, 1
+		assert date_count_in_month(2020, cnt) == s_day_counts(cnt)
+	loop
+	assert date_count_in_month(2021, 2) == 28
+
+	logmes "OK"

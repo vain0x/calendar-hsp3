@@ -1,0 +1,65 @@
+// カレンダーアプリ
+
+#packopt name "calendar"
+#packopt hide 1
+
+#include "hsp3utf.as"
+
+#module
+
+#deffunc app_init
+
+	gsel 0, -1
+
+	s_main_window_id = 1
+
+	s_year = gettime(0)
+	s_month = gettime(1)
+	s_date = gettime(3)
+
+	screen s_main_window_id, 220, 220
+	title "カレンダー"
+
+	font "MS Gothic", 13
+	return
+
+#deffunc app_update
+
+	return
+
+#deffunc app_render
+
+	redraw 2
+
+	hsvcolor ,, 255 // white
+	boxf
+	color
+
+	pos 80, 20
+	mes str(s_year) + "年"
+
+	pos 10, 40
+	mes "Sun Mon Tue Wed Thu Fri Sat"
+	hsvcolor ,,  128 // gray
+	mes " 26  27  28  29  30  31   1"
+	color // black
+	mes "  2   3   4   5   6   7   8"
+	mes "  9  10  11  12  13  14  15"
+	mes " 16  17  18  19  20  21  22"
+	mes " 23  24  25  26  27  28  29"
+
+	redraw
+	return
+
+#deffunc app_main
+
+	app_init
+	repeat
+		app_update
+		app_render
+		await 16
+	loop
+
+#global
+
+	app_main

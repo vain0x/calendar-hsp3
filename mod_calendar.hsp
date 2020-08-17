@@ -1,0 +1,72 @@
+// カレンダー
+
+#ifndef included_mod_calendar_hsp
+#define included_mod_calendar_hsp
+
+#module m_calendar
+
+// 日曜
+#enum global k_dow_sun = 0
+// 月曜
+#enum global k_dow_mon
+// 火曜
+#enum global k_dow_tue
+// 水曜
+#enum global k_dow_wed
+// 木曜
+#enum global k_dow_thu
+// 金曜
+#enum global k_dow_fri
+// 土曜
+#enum global k_dow_sat
+
+// 曜日を求める。
+//
+// ツェラーの公式を使う。曜日の値は `k_dow_*`。
+#defcfunc day_of_week int year, int month, int day, \
+	local y, local m, local d, local c, local g
+
+	assert 1900 <= year && year < 3000
+	assert 1 <= month && month <= 12
+	assert 1 <= day && day <= 31
+
+	if month <= 2 {
+		c = (year - 1) / 100
+		y = (year - 1) \ 100
+		m = month + 12
+	} else {
+		c = year / 100
+		y = year \ 100
+		m = month
+	}
+
+	g = 5 * c + c / 4
+	return (day + (26 * (m + 1) / 10) + y + y / 4 + g + 6) \ 7
+
+// 閏年？
+#defcfunc is_leap_year int year
+
+	return (year \ 400 == 0) || (year \ 100 != 0 && year \ 4 == 0)
+
+// 1か月の日数
+#defcfunc date_count_in_month int year, int month
+
+	assert 1 <= month && month <= 12
+
+	if month == 2 {
+		if is_leap_year(year) {
+			return 29
+		}
+
+		return 28
+	}
+
+	if month == 4 || month == 6 || month == 9 || month == 11 {
+		return 30
+	}
+
+	return 31
+
+#global
+
+#endif
